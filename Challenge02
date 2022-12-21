@@ -1,0 +1,114 @@
+Sub StockTicker()
+    '--------------------------------------------------------------------------------------
+    '                   CREATE A WORKSHEET LOOP TO WORK ON ALL WORKSHEETS
+    '                   NOTE THE STATEMENT IS "FOR EACH"
+    'The "ws.activate" command is needed for the script to go from sheet to sheet, 
+    'without it, only one sheet is processed
+    '--------------------------------------------------------------------------------------
+        Dim ws As Worksheet
+    
+        For Each ws In ThisWorkbook.Worksheets
+            ws.activate
+    '--------------------------------------------------------------------------------------
+    '                   DEFINE ALL THE VARIABLES
+    '--------------------------------------------------------------------------------------
+            Dim ticker As String
+            Dim change As Double
+            Dim percent_change As Double
+            Dim count As Double
+                                count = 0
+            Dim count_adjust As Double
+        
+            Dim vol As Double
+                                vol = 0
+        
+            Dim sum_table_row As Integer
+                                sum_table_row = 2
+        
+            lastrow = Cells(Rows.count, 1).End(xlUp).Row
+        
+            Dim percent_range As Range
+            Dim stock_vol As Range
+    
+            Dim min_dec As Double
+            Dim max_inc As Double
+            Dim max_vol As Double
+    '--------------------------------------------------------------------------------------
+    '                   CREATING THE LOOPS, BEST TO USE DIFFERENT VARIABLES
+    '                       IN ORDER TO KEEP TRACK OF WHAT LOOP IS WHAT
+    '--------------------------------------------------------------------------------------
+            For a = 2 To lastrow
+            
+                If Cells(a + 1, 1).Value <> Cells(a, 1).Value Then
+            
+                    vol = vol + Cells(a, 7).Value
+                    ticker = Cells(a, 1).Value
+                    count = count + 1
+                    count_adjust = count - 1
+                    change = Cells(a, 6).Value - Cells(a - count_adjust, 3).Value
+                    percent_change = (Cells(a, 6).Value / Cells(a - count_adjust, 3).Value) - 1
+            
+                    Range("i" & sum_table_row).Value = ticker
+                    Range("j" & sum_table_row).Value = change
+                    Range("k" & sum_table_row).Value = percent_change
+                    Range("l" & sum_table_row).Value = vol
+            
+                    sum_table_row = sum_table_row + 1
+                    vol = 0
+                    count = 0
+        
+                Else
+                    vol = vol + Cells(a, 7).Value
+                    count = count + 1
+                End If
+            Next a
+        
+                    Cells(1, 9).Value = "Ticker"
+                    Cells(1, 10).Value = "Yearly Change"
+                    Cells(1, 11).Value = "Percent Change"
+                    Cells(1, 12).Value = "Total Stock Volume"
+                    
+            Set percent_range = Range("k2:k3001")
+            max_inc = Application.WorksheetFunction.Max(percent_range)
+            Cells(2, 17).Value = max_inc
+        
+            min_dec = Application.WorksheetFunction.Min(percent_range)
+            Cells(3, 17).Value = min_dec
+        
+            Set stock_vol = Range("l2:l3001")
+            max_vol = Application.WorksheetFunction.Max(stock_vol)
+            Cells(4, 17).Value = max_vol
+        
+            For b = 2 To lastrow
+                If Range("K" & b).Value = max_inc Then
+                    Cells(2, 16).Value = Range("i" & b).Value
+                End If
+                If Range("K" & b).Value = min_dec Then
+                    Cells(3, 16).Value = Range("i" & b).Value
+                End If
+                If Range("l" & b).Value = max_vol Then
+                   Cells(4, 16).Value = Range("i" & b).Value
+                End If
+            Next b
+            
+            For c = 2 to 3001
+                If Cells(c, 10).Value < 0 Then
+                    Cells(c, 10).Interior.ColorIndex = 3
+                    Cells(c, 11).Interior.ColorIndex = 3
+                Else
+                    Cells(c, 10).Interior.ColorIndex = 4
+                    Cells(c, 11).Interior.ColorIndex = 4
+                End If
+            Next c
+            
+            Columns("k:k").NumberFormat = "0.00%"
+            Cells(2, 15).Value = "Greatest % Increase"
+            Cells(3, 15).Value = "Greatest % Decrease"
+            Cells(4, 15).Value = "Greatest Total Volume"
+            Cells(1, 16).Value = "Ticker"
+            Cells(1, 17).Value = "Value"
+            Cells(2, 17).NumberFormat = "0.00%"
+            Cells(3, 17).NumberFormat = "0.00%"
+            Columns("a:p").AutoFit
+Next ws
+End Sub
